@@ -1,6 +1,9 @@
 # textureUnpacker
 Unpack texture atlases created with TexturePacker (PixiJS, Phaser) and save them as individual images. Supports trimmed and rotated textures, too.
 
+Version 2.1 changes:
+- supports tpsheet format
+
 Version 2.0 changes:
 - optimize interaction
 - batch processing of files

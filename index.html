@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 
 <head>
-    <title>textureUnpacker 2.0</title>
+    <title>textureUnpacker 2.1</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -394,7 +394,7 @@
     <div class="container">
         <header>
             <img src="images/tu-logo.png" alt="textureUnpacker logo" class="logo" onerror="this.src='favicon.ico';">
-            <h1>textureUnpacker 2.0</h1>
+            <h1>textureUnpacker 2.1</h1>
             <p class="subtitle">批量解包TexturePacker图集文件</p>
         </header>
 
@@ -404,7 +404,7 @@
                 <div class="upload-area" id="dropArea">
                     <div class="upload-icon">📁</div>
                     <p>拖拽文件夹到此处或点击选择文件夹</p>
-                    <p><small>支持PNG/JPG和JSON文件对</small></p>
+                    <p><small>支持 png / jpg 和 json / tpsheet 文件对</small></p>
                     <input type="file" id="folderInput" webkitdirectory style="display: none;" multiple>
                     <button class="btn" id="selectFolderBtn">选择文件夹</button>
                 </div>
@@ -457,7 +457,7 @@
         </main>
 
         <footer>
-            <p>textureUnpacker 2.0 &copy; 2025 | 解包TexturePacker创建的图集文件</p>
+            <p>textureUnpacker 2.1 &copy; 2025 | 解包TexturePacker创建的图集文件</p>
             <p>支持修剪(trimmed)和旋转(rotated)的纹理</p>
         </footer>
     </div>
@@ -580,12 +580,16 @@
         }
 
         function findMatchedPairs() {
-            // 分离图像和JSON文件
+            // 分离图像和配置文件（包括JSON和TPSHEET）
             const imageFiles = folderFiles.filter(file => {
                 const lowerName = file.name.toLowerCase();
                 return lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg');
             });
             const jsonFiles = folderFiles.filter(file => file.name.toLowerCase().endsWith('.json'));
+            const tpsheetFiles = folderFiles.filter(file => file.name.toLowerCase().endsWith('.tpsheet'));
+
+            // 合并配置文件列表
+            const configFiles = [...jsonFiles, ...tpsheetFiles];
 
             // 匹配文件对
             matchedPairs = [];
@@ -601,14 +605,18 @@
                     baseName = imageFile.name.replace(/\.jpeg$/i, '');
                 }
 
-                const matchingJson = jsonFiles.find(jsonFile =>
-                    jsonFile.name.replace(/\.json$/i, '') === baseName);
+                const matchingConfig = configFiles.find(configFile => {
+                    const configBaseName = configFile.name
+                        .replace(/\.json$/i, '')
+                        .replace(/\.tpsheet$/i, '');
+                    return configBaseName === baseName;
+                });
 
-                if (matchingJson) {
+                if (matchingConfig) {
                     matchedPairs.push({
                         name: baseName,
                         image: imageFile,
-                        json: matchingJson,
+                        config: matchingConfig,
                         selected: true
                     });
                 }
@@ -621,7 +629,7 @@
 
         function displayFileList() {
             if (matchedPairs.length === 0) {
-                fileList.innerHTML = '<p>未找到匹配的图像/JSON文件对</p>';
+                fileList.innerHTML = '<p>未找到匹配的图像/配置文件对</p>';
                 fileListContainer.classList.remove('hidden');
                 processBtn.disabled = true;
                 return;
@@ -636,7 +644,7 @@
                 <div class="file-info">
                     <div class="file-name">${pair.name}</div>
                     <div class="file-details">
-                        ${pair.image.name} + ${pair.json.name}
+                        ${pair.image.name} + ${pair.config.name}
                     </div>
                 </div>
             </div>
@@ -715,10 +723,19 @@
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
 
-                // 读取JSON文件
+                // 读取配置文件
                 reader.onload = (e) => {
                     try {
-                        const jsonData = JSON.parse(e.target.result);
+                        let jsonData;
+
+                        // 判断配置文件类型
+                        if (pair.config.name.toLowerCase().endsWith('.tpsheet')) {
+                            // 解析.tpsheet格式为JSON格式
+                            jsonData = parseTpsheetToJson(e.target.result);
+                        } else {
+                            // JSON文件直接解析
+                            jsonData = JSON.parse(e.target.result);
+                        }
 
                         // 读取图像文件
                         const imageReader = new FileReader();
@@ -756,7 +773,7 @@
                 };
 
                 reader.onerror = reject;
-                reader.readAsText(pair.json);
+                reader.readAsText(pair.config);
             });
         }
 
@@ -1047,6 +1064,102 @@
             setTimeout(() => {
                 statusMessage.classList.add('hidden');
             }, 3000);
+        }
+
+        /**
+         * 将.tpsheet格式解析为JSON格式
+         * @param {string} tpsheetContent - .tpsheet文件内容
+         * @returns {object} 解析后的JSON对象
+         */
+        function parseTpsheetToJson(tpsheetContent) {
+            const lines = tpsheetContent.split('\n');
+            const meta = {};
+            const frames = {};
+
+            let textureWidth = 0;
+            let textureHeight = 0;
+
+            // 解析元数据行（以冒号开头的行）
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || line.startsWith('#')) return; // 忽略空行和注释行
+
+                if (line.startsWith(':')) {
+                    // 元数据行，例如 :format=40300
+                    const [key, value] = line.substring(1).split('=');
+                    meta[key] = value;
+
+                    // 获取纹理尺寸
+                    if (key === 'size') {
+                        const [w, h] = value.split('x');
+                        textureWidth = parseInt(w);
+                        textureHeight = parseInt(h);
+                    }
+                }
+            });
+
+            // 解析帧数据行
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || line.startsWith('#') || line.startsWith(':')) return;
+
+                // 帧数据行，例如 theme10414_i_1;2;5;128;113; 0.5;0.4513274336283186; 0;0;0;0; 4;128;0;0;0;0;113;128;113; 2;1;2;3;0;1;3
+                const parts = line.split(';');
+                if (parts.length < 5) return; // 不是有效的帧数据
+
+                const name = parts[0];
+                const x = parseInt(parts[1]);
+                let y = parseInt(parts[2]); // 注意：这里需要特殊处理
+                const w = parseInt(parts[3]);
+                const h = parseInt(parts[4]);
+
+                // 在Unity中，Y轴是从下往上计算的，而Web中是从上往下计算的
+                // 所以需要转换Y坐标
+                y = textureHeight - y - h;
+
+                // pivot点信息
+                let pivotX = 0.5;
+                let pivotY = 0.5;
+                if (parts.length > 6) {
+                    pivotX = parseFloat(parts[5]);
+                    // Unity中的pivot Y坐标也需要翻转
+                    pivotY = 1.0 - parseFloat(parts[6]);
+                }
+
+                // 创建标准PIXI.js格式的frame对象
+                frames[name] = {
+                    frame: {
+                        x: x,
+                        y: y,
+                        w: w,
+                        h: h
+                    },
+                    rotated: false,
+                    trimmed: false,
+                    spriteSourceSize: {
+                        x: 0,
+                        y: 0,
+                        w: w,
+                        h: h
+                    },
+                    sourceSize: {
+                        w: w,
+                        h: h
+                    },
+                    pivot: {
+                        x: pivotX,
+                        y: pivotY
+                    }
+                };
+            });
+
+            // 构建符合PIXI.js Spritesheet格式的JSON对象
+            const result = {
+                frames: frames,
+                meta: meta
+            };
+
+            return result;
         }
 
         function addError(title, message) {
