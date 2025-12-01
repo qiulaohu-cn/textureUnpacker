@@ -1,120 +1,386 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
+
 <head>
-    <title>textureUnpacker 1.0</title>
+    <title>textureUnpacker 2.0</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
     <meta name="author" content="Enea Entertainment" />
+    <meta name="description" content="Texture atlas unpacker for TexturePacker files" />
 
     <link rel="shortcut icon" href="favicon.ico">
 
     <style type="text/css">
-        /* CLIENT-SPECIFIC STYLES */
-        #outlook a{padding:0;} /* Force Outlook to provide a "view in browser" message */
-        .ReadMsgBody{width:100%;} .ExternalClass{width:100%;} /* Force Hotmail to display emails at full width */
-        .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height: 100%;} /* Force Hotmail to display normal line spacing */
-        body, table, td, a{-webkit-text-size-adjust:100%; -ms-text-size-adjust:100%;} /* Prevent WebKit and Windows mobile changing default text sizes */
-        table, td{mso-table-lspace:0pt; mso-table-rspace:0pt;} /* Remove spacing between tables in Outlook 2007 and up */
-        img{-ms-interpolation-mode:bicubic;} /* Allow smoother rendering of resized image in Internet Explorer */
+        /* 现代化样式 */
+        * {
+            box-sizing: border-box;
+        }
 
-        /* RESET STYLES */
-        body{margin:0; padding:0;}
-        img{border:0; height:auto; line-height:100%; outline:none; text-decoration:none;}
-        table{border-collapse:collapse !important;}
-        body{height:100% !important; margin:0; padding:0; width:100% !important;}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
 
-        /* iOS BLUE LINKS */
-        .appleBody a {color:#68440a; text-decoration: none;}
-        .appleFooter a {color:#999999; text-decoration: none;}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-        /* MOBILE STYLES */
-        @media screen and (max-width: 525px) {
+        header {
+            text-align: center;
+            padding: 20px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
 
-            /* ALLOWS FOR FLUID TABLES */
-            table[class="wrapper"]{
-              width:100% !important;
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #fafafa;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-toggle {
+            background: #17a2b8;
+            padding: 6px 12px;
+            font-size: 14px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-checkbox {
+            margin-right: 15px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .file-info {
+            flex-grow: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .file-details {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .status-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-group {
+            margin-bottom: 30px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fafafa;
+        }
+
+        .result-group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            cursor: pointer;
+            background-color: #e9ecef;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .result-group-title {
+            margin: 0;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .result-group-stats {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .result-group-content {
+            padding: 15px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .result-item {
+            text-align: center;
+        }
+
+        .result-img {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            background-color: white;
+        }
+
+        .result-name {
+            font-size: 0.85em;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+
+        .error-panel {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .error-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .error-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .error-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #f5c6cb;
+        }
+
+        .error-item:last-child {
+            border-bottom: none;
+        }
+
+        .error-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .error-message {
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        .failed-item {
+            opacity: 0.5;
+            position: relative;
+        }
+
+        .failed-item::after {
+            content: "处理失败";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
             }
 
-            /* ADJUSTS LAYOUT OF LOGO IMAGE */
-            td[class="logo"]{
-              text-align: left;
-              padding: 20px 0 20px 0 !important;
+            .card {
+                padding: 20px;
             }
 
-            td[class="logo"] img{
-              margin:0 auto!important;
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
             }
 
-            /* USE THESE CLASSES TO HIDE CONTENT ON MOBILE */
-            td[class="mobile-hide"]{
-              display:none;}
-
-            img[class="mobile-hide"]{
-              display: none !important;
+            .btn {
+                width: 100%;
+                max-width: 300px;
             }
 
-            img[class="img-max"]{
-              max-width: 100% !important;
-              height:auto !important;
-            }
-
-            /* FULL-WIDTH TABLES */
-            table[class="responsive-table"]{
-              width:100%!important;
-            }
-
-            /* UTILITY CLASSES FOR ADJUSTING PADDING ON MOBILE */
-            td[class="padding"]{
-              padding: 10px 5% 15px 5% !important;
-            }
-
-            td[class="padding-copy"]{
-              padding: 10px 5% 10px 5% !important;
-              text-align: center;
-            }
-
-            td[class="padding-meta"]{
-              padding: 30px 5% 0px 5% !important;
-              text-align: center;
-            }
-
-            td[class="no-pad"]{
-              padding: 0 0 20px 0 !important;
-            }
-
-            td[class="no-padding"]{
-              padding: 0 !important;
-            }
-
-            td[class="section-padding"]{
-              padding: 50px 15px 50px 15px !important;
-            }
-
-            td[class="section-header"]{
-              padding: 10px 15px 10px 15px !important;
-            }
-
-            td[class="section-padding-bottom-image"]{
-              padding: 50px 15px 0 15px !important;
-            }
-
-            /* ADJUST BUTTONS ON MOBILE */
-            td[class="mobile-wrapper"]{
-                padding: 10px 5% 15px 5% !important;
-            }
-
-            table[class="mobile-button-container"]{
-                margin:0 auto;
-                width:100% !important;
-            }
-
-            a[class="mobile-button"]{
-                width:80% !important;
-                padding: 15px !important;
-                border: 0 !important;
-                font-size: 16px !important;
+            .results-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             }
         }
     </style>
@@ -122,146 +388,725 @@
     <script type="text/javascript" src="scripts/jszip.min.js"></script>
     <script type="text/javascript" src="scripts/filesaver.min.js"></script>
     <script type="text/javascript" src="scripts/pixi.min.js"></script>
-    <script type="text/javascript" src="scripts/tu.js"></script>
 </head>
 
-<body style="margin: 0; padding: 0;">
-    <div id="sourceContent"></div>
+<body>
+    <div class="container">
+        <header>
+            <img src="images/tu-logo.png" alt="textureUnpacker logo" class="logo" onerror="this.src='favicon.ico';">
+            <h1>textureUnpacker 2.0</h1>
+            <p class="subtitle">批量解包TexturePacker图集文件</p>
+        </header>
 
-    <!-- HEADER -->
-    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-            <td bgcolor="#ffffff" align="center" width="100%" style="padding: 20px 15px 20px 15px;" class="section-header">
-                <table border="0" cellpadding="0" cellspacing="0" width="500" class="wrapper" align="center">
-                    <!-- LOGO/PREHEADER TEXT -->
-                    <tr>
-                        <td align="center">
-                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                                <tr>
-                                    <td bgcolor="#ffffff" align="center"><a href="http://tu.enea.sk" target="_blank"><img alt="textureUnpacker logo" src="images/tu-logo.png" width="60" height="60" style="display: block; font-family: Helvetica, Arial, sans-serif; color: #666666; font-size: 10px;" border="0"></a></td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+        <main>
+            <div class="card">
+                <h2>选择文件夹</h2>
+                <div class="upload-area" id="dropArea">
+                    <div class="upload-icon">📁</div>
+                    <p>拖拽文件夹到此处或点击选择文件夹</p>
+                    <p><small>支持PNG/JPG和JSON文件对</small></p>
+                    <input type="file" id="folderInput" webkitdirectory style="display: none;" multiple>
+                    <button class="btn" id="selectFolderBtn">选择文件夹</button>
+                </div>
 
-    <!-- ONE COLUMN SECTION -->
-    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-            <td bgcolor="#D8F1FF" align="center" style="padding: 0px 15px 30px 15px;" class="section-padding">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" class="responsive-table">
-                    <tr>
-                        <td>
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                <tr>
-                                    <td>
-                                        <!-- TEXTS -->
-                                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                            <tr>
-                                                <td align="center" style="font-size: 25px; font-family: Helvetica, Arial, sans-serif; color: #333333; padding-top: 30px;" class="padding-copy">textureUnpacker 1.1</td>
-                                            </tr>
-                                            <tr id="stepByStep" style="display: none;">
-                                                <td align="center" style="padding: 20px 0 0 0; font-size: 16px; line-height: 25px; font-family: Helvetica, Arial, sans-serif; color: #666666;" class="padding-copy"><p id="tutorial"></p></td>
-                                            </tr>
-                                            <tr id="restartButton" style="display: none;">
-                                                <td>
-                                                    <!-- BULLETPROOF BUTTON -->
-                                                    <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-button-container">
-                                                        <tr>
-                                                            <td align="center" style="padding: 25px 0 0 0;" class="padding-copy">
-                                                                <table border="0" cellspacing="0" cellpadding="0" class="responsive-table">
-                                                                    <tr>
-                                                                        <td align="center"><a href="javascript: window.location.reload();" style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; background-color: #00529c; border-top: 15px solid #00529c; border-bottom: 15px solid #00529c; border-left: 25px solid #00529c; border-right: 25px solid #00529c; border-radius: 3px; -webkit-border-radius: 3px; -moz-border-radius: 3px; display: inline-block;" class="mobile-button">Reset</a></td>
+                <div id="statusMessage" class="status hidden"></div>
 
-                                                                        <td>&nbsp;</td>
+                <div id="fileListContainer" class="file-list hidden">
+                    <h3>可处理的文件对</h3>
+                    <div id="fileList"></div>
+                    <div class="btn-group">
+                        <button class="btn" id="selectAllBtn">全选</button>
+                        <button class="btn" id="deselectAllBtn">取消全选</button>
+                        <button class="btn" id="processBtn" disabled>开始处理</button>
+                    </div>
+                </div>
 
-                                                                        <td align="center"><a href="javascript: downloadAll();" style="font-size: 16px; font-family: Helvetica, Arial, sans-serif; font-weight: normal; color: #ffffff; text-decoration: none; background-color: #00529c; border-top: 15px solid #00529c; border-bottom: 15px solid #00529c; border-left: 25px solid #00529c; border-right: 25px solid #00529c; border-radius: 3px; -webkit-border-radius: 3px; -moz-border-radius: 3px; display: inline-block;" class="mobile-button">Download All</a></td>
-                                                                    </tr>
-                                                                </table>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr id="filesForm" style="display: none;">
-                                    <td align="center">
-                                        <!-- FILE -->
-                                        <table width="100%" border="0" cellspacing="0" cellpadding="0" class="mobile-button-container">
-                                            <tr>
-                                                <td align="center" style="padding: 25px 0 0 0;" class="padding-copy">
-                                                    <table border="0" cellspacing="0" cellpadding="0" class="responsive-table">
-                                                        <tr>
-                                                            <td align="center">
-                                                                <form id="form" runat="server">
-                                                                    <input type="file" id="imgInp" onchange="javascript: readURL(this)">
-                                                                    <img id="pngfile" src="#" style="display: none">
-                                                                </form>
-                                                            </td>
-                                                        </tr>
-                                                    </table>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr id="messages" style="display: none;">
-            <td bgcolor="#ecf8ff" align="center" style="padding: 0px 15px 25px 15px;" class="section-padding">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" class="responsive-table">
-                    <tr>
-                        <td>
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                <tr>
-                                    <!-- MESSAGES -->
-                                    <td class="padding-copy">
-                                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                            <tr>
-                                                <td align="center" style="font-size: 12px; font-family: Helvetica, Arial, sans-serif; color: #333333; padding-top: 30px;" class="padding-copy"><p id="msg"></p></td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-        <tr id="unpackResult" style="display: none;">
-            <td bgcolor="#ecf8ff" align="center" style="padding: 30px 15px 30px 15px;" class="section-padding">
-                <table border="0" cellpadding="0" cellspacing="0" width="100%" class="responsive-table">
-                    <tr>
-                        <td>
-                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                <tr>
-                                    <!-- IMAGES -->
-                                    <td class="padding-copy">
-                                        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                                            <tr>
-                                                <td align="center">
-                                                    <div id="destContent"></div>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+                <div id="processingSection" class="hidden">
+                    <h3>处理进度</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div id="progressText">准备处理...</div>
+                </div>
+
+                <div id="resultsSection" class="hidden">
+                    <h3>处理结果</h3>
+                    <div id="downloadProgress" class="status status-info hidden">
+                        <div>正在打包下载文件，请稍候...</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="downloadProgressFill" style="width: 0%"></div>
+                        </div>
+                        <div id="downloadProgressText">准备中...</div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn" id="downloadSelectedBtn">下载选中</button>
+                        <button class="btn btn-secondary" id="downloadAllBtn">下载全部</button>
+                        <button class="btn btn-secondary" id="resetBtn">重新开始</button>
+                    </div>
+                    <div id="resultsContainer" class="results"></div>
+                </div>
+
+                <div id="errorPanel" class="error-panel hidden">
+                    <div class="error-header">
+                        <h3>错误信息</h3>
+                        <button class="btn btn-danger" id="clearErrorsBtn">清空错误</button>
+                    </div>
+                    <ul id="errorList" class="error-list"></ul>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>textureUnpacker 2.0 &copy; 2025 | 解包TexturePacker创建的图集文件</p>
+            <p>支持修剪(trimmed)和旋转(rotated)的纹理</p>
+        </footer>
+    </div>
+
+    <!-- 隐藏元素用于PIXI渲染 -->
+    <div id="sourceContent" style="display: none;"></div>
+    <div id="destContent" style="display: none;"></div>
+
+    <script type="text/javascript">
+        // 全局变量
+        let folderFiles = [];
+        let matchedPairs = [];
+        let processedResults = [];
+        let currentPairIndex = 0;
+        let renderer, stage;
+        let errors = [];
+        let currentFolderName = '';
+
+        // DOM元素引用
+        const dropArea = document.getElementById('dropArea');
+        const folderInput = document.getElementById('folderInput');
+        const selectFolderBtn = document.getElementById('selectFolderBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const fileListContainer = document.getElementById('fileListContainer');
+        const fileList = document.getElementById('fileList');
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        const deselectAllBtn = document.getElementById('deselectAllBtn');
+        const processBtn = document.getElementById('processBtn');
+        const processingSection = document.getElementById('processingSection');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const downloadSelectedBtn = document.getElementById('downloadSelectedBtn');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const errorPanel = document.getElementById('errorPanel');
+        const errorList = document.getElementById('errorList');
+        const clearErrorsBtn = document.getElementById('clearErrorsBtn');
+        const downloadProgress = document.getElementById('downloadProgress');
+        const downloadProgressFill = document.getElementById('downloadProgressFill');
+        const downloadProgressText = document.getElementById('downloadProgressText');
+
+        // 初始化应用
+        window.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // 绑定事件
+            selectFolderBtn.addEventListener('click', () => {
+                folderInput.click();
+            });
+
+            folderInput.addEventListener('change', handleFolderSelect);
+
+            // 拖拽事件
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('dragover');
+            });
+
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('dragover');
+            });
+
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('dragover');
+                handleFolderDrop(e.dataTransfer);
+            });
+
+            // 按钮事件
+            selectAllBtn.addEventListener('click', selectAllFiles);
+            deselectAllBtn.addEventListener('click', deselectAllFiles);
+            processBtn.addEventListener('click', processSelectedFiles);
+            downloadSelectedBtn.addEventListener('click', downloadSelected);
+            downloadAllBtn.addEventListener('click', downloadAll);
+            resetBtn.addEventListener('click', resetApp);
+            clearErrorsBtn.addEventListener('click', clearErrors);
+
+            // 初始化PIXI
+            initializePIXI();
+        }
+
+        function initializePIXI() {
+            renderer = new PIXI.CanvasRenderer(100, 100, { transparent: true });
+            renderer.view.style.display = 'none';
+            document.getElementById('sourceContent').appendChild(renderer.view);
+            stage = new PIXI.Container();
+        }
+
+        function handleFolderSelect(event) {
+            const files = Array.from(event.target.files);
+            // 获取文件夹名称
+            if (files.length > 0) {
+                const fullPath = files[0].webkitRelativePath;
+                const folderName = fullPath.split('/')[0];
+                currentFolderName = folderName;
+            }
+            processFolderFiles(files);
+        }
+
+        function handleFolderDrop(dataTransfer) {
+            const files = Array.from(dataTransfer.items)
+                .filter(item => item.webkitGetAsEntry().isFile)
+                .map(item => item.getAsFile());
+            // 获取文件夹名称
+            if (files.length > 0) {
+                const fullPath = files[0].webkitRelativePath;
+                const folderName = fullPath.split('/')[0];
+                currentFolderName = folderName;
+            }
+            processFolderFiles(files);
+        }
+
+        function processFolderFiles(files) {
+            folderFiles = files;
+            findMatchedPairs();
+        }
+
+        function findMatchedPairs() {
+            // 分离图像和JSON文件
+            const imageFiles = folderFiles.filter(file => {
+                const lowerName = file.name.toLowerCase();
+                return lowerName.endsWith('.png') || lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg');
+            });
+            const jsonFiles = folderFiles.filter(file => file.name.toLowerCase().endsWith('.json'));
+
+            // 匹配文件对
+            matchedPairs = [];
+            imageFiles.forEach(imageFile => {
+                const imageName = imageFile.name.toLowerCase();
+                let baseName;
+
+                if (imageName.endsWith('.png')) {
+                    baseName = imageFile.name.replace(/\.png$/i, '');
+                } else if (imageName.endsWith('.jpg')) {
+                    baseName = imageFile.name.replace(/\.jpg$/i, '');
+                } else if (imageName.endsWith('.jpeg')) {
+                    baseName = imageFile.name.replace(/\.jpeg$/i, '');
+                }
+
+                const matchingJson = jsonFiles.find(jsonFile =>
+                    jsonFile.name.replace(/\.json$/i, '') === baseName);
+
+                if (matchingJson) {
+                    matchedPairs.push({
+                        name: baseName,
+                        image: imageFile,
+                        json: matchingJson,
+                        selected: true
+                    });
+                }
+            });
+
+            // 显示结果
+            showStatus(`找到 ${matchedPairs.length} 对匹配的文件`, 'status-success');
+            displayFileList();
+        }
+
+        function displayFileList() {
+            if (matchedPairs.length === 0) {
+                fileList.innerHTML = '<p>未找到匹配的图像/JSON文件对</p>';
+                fileListContainer.classList.remove('hidden');
+                processBtn.disabled = true;
+                return;
+            }
+
+            let html = '';
+            matchedPairs.forEach((pair, index) => {
+                html += `
+            <div class="file-item">
+                <input type="checkbox" class="file-checkbox" id="file-${index}" 
+                       data-index="${index}" ${pair.selected ? 'checked' : ''}>
+                <div class="file-info">
+                    <div class="file-name">${pair.name}</div>
+                    <div class="file-details">
+                        ${pair.image.name} + ${pair.json.name}
+                    </div>
+                </div>
+            </div>
+        `;
+            });
+
+            fileList.innerHTML = html;
+
+            // 绑定复选框事件
+            document.querySelectorAll('.file-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    matchedPairs[index].selected = e.target.checked;
+                    updateProcessButtonState();
+                });
+            });
+
+            fileListContainer.classList.remove('hidden');
+            updateProcessButtonState();
+        }
+        function updateProcessButtonState() {
+            const selectedCount = matchedPairs.filter(pair => pair.selected).length;
+            processBtn.disabled = selectedCount === 0;
+        }
+
+        function selectAllFiles() {
+            matchedPairs.forEach(pair => pair.selected = true);
+            document.querySelectorAll('.file-checkbox').forEach(checkbox => {
+                checkbox.checked = true;
+            });
+            updateProcessButtonState();
+        }
+
+        function deselectAllFiles() {
+            matchedPairs.forEach(pair => pair.selected = false);
+            document.querySelectorAll('.file-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            updateProcessButtonState();
+        }
+
+        async function processSelectedFiles() {
+            const selectedPairs = matchedPairs.filter(pair => pair.selected);
+            if (selectedPairs.length === 0) return;
+
+            // 显示处理区域
+            processingSection.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+            fileListContainer.classList.add('hidden');
+            progressFill.style.width = '0%';
+            progressText.textContent = '准备处理...';
+
+            processedResults = [];
+            currentPairIndex = 0;
+
+            // 逐个处理选中的文件对
+            for (const pair of selectedPairs) {
+                try {
+                    await processSinglePair(pair);
+                    currentPairIndex++;
+                    const progress = (currentPairIndex / selectedPairs.length) * 100;
+                    progressFill.style.width = progress + '%';
+                    progressText.textContent = `正在处理: ${pair.name} (${currentPairIndex}/${selectedPairs.length})`;
+                } catch (error) {
+                    console.error('处理文件时出错:', error);
+                    addError(`处理 ${pair.name} 时出错`, error.message);
+                    progressText.textContent = `处理 ${pair.name} 时出错: ${error.message}`;
+                }
+            }
+
+            // 显示结果
+            showResults();
+        }
+
+        function processSinglePair(pair) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                // 读取JSON文件
+                reader.onload = (e) => {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+
+                        // 读取图像文件
+                        const imageReader = new FileReader();
+                        imageReader.onload = (event) => {
+                            try {
+                                // 使用PIXI处理
+                                processWithPIXI(event.target.result, jsonData, pair.name)
+                                    .then(result => {
+                                        processedResults.push({
+                                            name: pair.name,
+                                            images: result,
+                                            failedCount: 0 // 初始化失败计数
+                                        });
+                                        resolve();
+                                    })
+                                    .catch(error => {
+                                        // 记录Spritesheet创建失败的错误
+                                        addError(`处理 ${pair.name} 时出错`, error.message);
+                                        processedResults.push({
+                                            name: pair.name,
+                                            images: [],
+                                            failedCount: 1 // 标记为失败
+                                        });
+                                        resolve();
+                                    });
+                            } catch (error) {
+                                reject(error);
+                            }
+                        };
+                        imageReader.onerror = reject;
+                        imageReader.readAsDataURL(pair.image);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+
+                reader.onerror = reject;
+                reader.readAsText(pair.json);
+            });
+        }
+
+        function processWithPIXI(pngData, jsonData, pairName) {
+            return new Promise((resolve, reject) => {
+                // 重置loader并使用正确的PIXI.loader API (小写l)
+                PIXI.loader.reset();
+                PIXI.loader
+                    .add(pairName, pngData)
+                    .load((loader, resources) => {
+                        try {
+                            const resource = resources[pairName];
+                            if (!resource || !resource.texture || !resource.texture.baseTexture) {
+                                resolve([]);
+                                return;
+                            }
+
+                            // 等待基础纹理加载完成后再创建Spritesheet
+                            const baseTexture = resource.texture.baseTexture;
+
+                            // 确保基础纹理已加载并具有正确的尺寸
+                            if (!baseTexture.hasLoaded) {
+                                baseTexture.once('loaded', () => {
+                                    createSpriteSheetAndParse(baseTexture, jsonData, pairName, resolve, reject);
+                                });
+                            } else {
+                                createSpriteSheetAndParse(baseTexture, jsonData, pairName, resolve, reject);
+                            }
+                        } catch (error) {
+                            console.error('PIXI处理错误:', error);
+                            reject(error); // 拒绝Promise以便上层可以捕获
+                        }
+                    });
+            });
+        }
+
+        function createSpriteSheetAndParse(baseTexture, jsonData, pairName, resolve, reject) {
+            try {
+                // 创建Spritesheet并解析
+                const spritesheet = new PIXI.Spritesheet(baseTexture, jsonData, pairName);
+
+                spritesheet.parse((textures) => {
+                    const images = [];
+                    let failedCount = 0;
+
+                    // 遍历所有纹理
+                    const textureNames = Object.keys(textures);
+                    let processedCount = 0;
+
+                    // 如果没有纹理，直接resolve
+                    if (textureNames.length === 0) {
+                        resolve(images);
+                        return;
+                    }
+
+                    textureNames.forEach(textureName => {
+                        try {
+                            const texture = textures[textureName];
+                            const sprite = new PIXI.Sprite(texture);
+
+                            // 创建临时舞台
+                            const tempStage = new PIXI.Container();
+                            tempStage.addChild(sprite);
+
+                            // 创建画布并渲染
+                            const canvas = document.createElement('canvas');
+                            canvas.width = sprite.width;
+                            canvas.height = sprite.height;
+
+                            // 调整渲染器大小并渲染
+                            renderer.resize(sprite.width, sprite.height);
+                            renderer.render(tempStage);
+
+                            // 绘制到画布
+                            const context = canvas.getContext('2d');
+                            context.drawImage(renderer.view, 0, 0);
+
+                            images.push({
+                                name: textureName,
+                                dataUrl: canvas.toDataURL(),
+                                width: sprite.width,
+                                height: sprite.height
+                            });
+
+                            // 清理
+                            tempStage.removeChild(sprite);
+                        } catch (textureError) {
+                            console.warn(`处理纹理 ${textureName} 时出错:`, textureError);
+                            failedCount++;
+                            addError(`处理 ${pairName} 中的 ${textureName} 时出错`, textureError.message);
+                        } finally {
+                            processedCount++;
+                            // 当所有纹理都处理完毕时，resolve promise
+                            if (processedCount === textureNames.length) {
+                                // 更新失败计数
+                                const resultEntry = processedResults.find(r => r.name === pairName);
+                                if (resultEntry) {
+                                    resultEntry.failedCount = failedCount;
+                                }
+                                resolve(images);
+                            }
+                        }
+                    });
+                });
+            } catch (sheetError) {
+                console.error('Spritesheet创建错误:', sheetError);
+                reject(sheetError); // 拒绝Promise以便上层可以捕获
+            }
+        }
+
+        function showResults() {
+            processingSection.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+
+            let totalImages = 0;
+            let totalFailed = 0;
+
+            let html = '';
+            processedResults.forEach((result, index) => {
+                totalImages += result.images.length;
+                totalFailed += result.failedCount || 0;
+
+                // 为每个文件创建一个分组容器
+                html += `
+            <div class="result-group" data-group-name="${result.name}" data-group-index="${index}">
+                <div class="result-group-header">
+                    <h3 class="result-group-title">${result.name} <span class="result-group-stats">(${result.images.length} 张图片${result.failedCount ? ', ' + result.failedCount + ' 张失败' : ''})</span></h3>
+                    <button class="btn btn-toggle btn-expand" data-target="${result.name}" data-index="${index}">展开</button>
+                </div>
+                <div class="result-group-content hidden" id="group-content-${result.name}-${index}">
+                    <div class="results-grid">
+        `;
+
+                // 显示成功的图片
+                result.images.forEach(image => {
+                    html += `
+                <div class="result-item">
+                    <img src="${image.dataUrl}" alt="${image.name}" 
+                         class="result-img" title="${image.name} (${image.width}x${image.height})">
+                    <div class="result-name" title="${image.name}">${getShortName(image.name, 15)}</div>
+                </div>
+            `;
+                });
+
+                // 显示失败的项目
+                for (let i = 0; i < (result.failedCount || 0); i++) {
+                    html += `
+                <div class="result-item failed-item">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23ccc'/%3E%3Cline x1='0' y1='0' x2='100' y2='100' stroke='%23f00' stroke-width='2'/%3E%3C/svg%3E" 
+                         alt="处理失败" class="result-img">
+                    <div class="result-name">处理失败</div>
+                </div>
+            `;
+                }
+
+                html += `
+                    </div>
+                </div>
+            </div>
+        `;
+            });
+
+            resultsContainer.innerHTML = html;
+
+            // 绑定折叠/展开事件
+            document.querySelectorAll('.result-group-header').forEach(header => {
+                header.addEventListener('click', function (e) {
+                    if (e.target.classList.contains('btn-toggle')) return;
+                    const groupName = this.closest('.result-group').dataset.groupName;
+                    const groupIndex = this.closest('.result-group').dataset.groupIndex;
+                    toggleGroup(groupName, groupIndex);
+                });
+            });
+
+            document.querySelectorAll('.btn-toggle').forEach(button => {
+                button.addEventListener('click', function () {
+                    const groupName = this.dataset.target;
+                    const groupIndex = this.dataset.index;
+                    toggleGroup(groupName, groupIndex);
+                });
+            });
+
+            // 显示处理结果状态
+            if (totalFailed > 0) {
+                showStatus(`处理完成: 共${totalImages + totalFailed}张图片，${totalFailed}张处理失败`, 'status-warning');
+            } else {
+                showStatus(`处理完成: 共${totalImages}张图片`, 'status-success');
+            }
+        }
+
+        function toggleGroup(groupName, groupIndex) {
+            const content = document.getElementById(`group-content-${groupName}-${groupIndex}`);
+            const button = document.querySelector(`.btn-toggle[data-target="${groupName}"][data-index="${groupIndex}"]`);
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                button.textContent = '收起';
+                button.classList.remove('btn-expand');
+            } else {
+                content.classList.add('hidden');
+                button.textContent = '展开';
+                button.classList.add('btn-expand');
+            }
+        }
+
+        function getShortName(name, maxLength) {
+            if (name.length <= maxLength) return name;
+            return name.substring(0, maxLength) + '...';
+        }
+
+        function downloadSelected() {
+            // 当前版本中，"下载选中"按钮和"下载全部"按钮功能相同
+            // 因为预览页面中的图片目前不支持单独选择
+            downloadAll();
+        }
+
+        function downloadAll() {
+            if (processedResults.length === 0) return;
+
+            // 显示下载进度
+            downloadProgress.classList.remove('hidden');
+            downloadProgressFill.style.width = '0%';
+            downloadProgressText.textContent = '准备打包文件...';
+
+            const zip = new JSZip();
+            let totalFiles = 0;
+            let currentFile = 0;
+
+            // 计算总文件数
+            processedResults.forEach(result => {
+                totalFiles += result.images.length;
+            });
+
+            // 更新进度显示
+            function updateProgress() {
+                currentFile++;
+                const progress = (currentFile / totalFiles) * 100;
+                downloadProgressFill.style.width = progress + '%';
+                downloadProgressText.textContent = `正在打包: ${currentFile}/${totalFiles} 文件`;
+            }
+
+            // 添加文件到ZIP
+            processedResults.forEach(result => {
+                const folder = zip.folder(result.name);
+                result.images.forEach(image => {
+                    const data = image.dataUrl.split(',')[1];
+                    folder.file(`${image.name}.png`, data, { base64: true });
+                    // 使用setTimeout确保进度更新不会被阻塞
+                    setTimeout(updateProgress, 0);
+                });
+            });
+
+            // 生成并下载ZIP
+            zip.generateAsync({ type: 'blob' }, (metadata) => {
+                // 更新进度显示
+                const percent = metadata.percent.toFixed(1);
+                downloadProgressText.textContent = `正在生成ZIP文件: ${percent}%`;
+                downloadProgressFill.style.width = percent + '%';
+            }).then(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                // 使用文件夹名称作为文件名，如果不可用则回退到原来的方式
+                const zipFileName = currentFolderName || (processedResults.length > 0 ? processedResults[0].name : 'texture_unpack_result');
+                a.download = `${zipFileName}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                // 隐藏进度显示
+                setTimeout(() => {
+                    downloadProgress.classList.add('hidden');
+                }, 1000);
+            }).catch(error => {
+                console.error('ZIP生成错误:', error);
+                showStatus('下载过程中发生错误', 'status-error');
+                downloadProgress.classList.add('hidden');
+            });
+        }
+
+        function showStatus(message, className) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status ' + className;
+            statusMessage.classList.remove('hidden');
+
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                statusMessage.classList.add('hidden');
+            }, 3000);
+        }
+
+        function addError(title, message) {
+            errors.push({
+                title: title,
+                message: message,
+                timestamp: new Date()
+            });
+
+            displayErrors();
+        }
+
+        function displayErrors() {
+            if (errors.length === 0) {
+                errorPanel.classList.add('hidden');
+                return;
+            }
+
+            let html = '';
+            errors.forEach(error => {
+                html += `
+                    <li class="error-item">
+                        <div class="error-title">${error.title}</div>
+                        <div class="error-message">${error.message}</div>
+                    </li>
+                `;
+            });
+
+            errorList.innerHTML = html;
+            errorPanel.classList.remove('hidden');
+        }
+
+        function clearErrors() {
+            errors = [];
+            displayErrors();
+        }
+
+        function resetApp() {
+            // 重置所有状态
+            folderFiles = [];
+            matchedPairs = [];
+            processedResults = [];
+            errors = [];
+
+            // 清空输入
+            folderInput.value = '';
+
+            // 隐藏所有部分
+            fileListContainer.classList.add('hidden');
+            processingSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            statusMessage.classList.add('hidden');
+            errorPanel.classList.add('hidden');
+            downloadProgress.classList.add('hidden');
+
+            // 重置进度条
+            progressFill.style.width = '0%';
+            downloadProgressFill.style.width = '0%';
+        }
+    </script>
 </body>
+
 </html>
